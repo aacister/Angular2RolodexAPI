@@ -33,20 +33,26 @@ if (!isProduction) {
 }
 
 if(isProduction){
-  console.log('Db is production');
+
   mongoose.connect(process.env.MONGODB_URI);
 } else {
-  console.log('db is Dev');
+
+/*
   mongoose.connect('mongodb://localhost/contactsDb', function(error){
     console.log('Mongoose state: ' + mongoose.connection.readyState);
   });
+*/
+mongoose.connect('mongodb://aacister:password123@ds145178.mlab.com:45178/heroku_g1ggrgzq', function(error){
+  console.log('Mongoose state: ' + mongoose.connection.readyState);
+});
+
   mongoose.set('debug', true);
 
 }
 
 require('./models/Contact');
 require('./models/Hobby');
-require('./models/User');
+
 
 app.use(require('./routes'));
 

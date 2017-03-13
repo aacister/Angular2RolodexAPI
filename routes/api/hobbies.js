@@ -2,7 +2,7 @@ var router = require('express').Router();
 var mongoose = require('mongoose');
 var deepPopulate = require('mongoose-deep-populate')(mongoose);
 var Hobby = mongoose.model('Hobby');
-var auth = require('../auth');
+
 
 router.param('hobby', function(req, res, next, id){
   var query = Hobby.findById(id);
@@ -20,7 +20,7 @@ router.param('hobby', function(req, res, next, id){
 
 
 //Get all hobbies
-router.get('/', auth.optional, (req, res, next) => {
+router.get('/',  (req, res, next) => {
   Hobby.find().exec(function(err, hobbies){
     if(err){
       return next(err);
@@ -30,15 +30,17 @@ router.get('/', auth.optional, (req, res, next) => {
 });
 
 //Get a hobby
-router.get('/:hobby', auth.optional,  function(req, res, next){
+router.get('/:hobby', function(req, res, next){
   Hobby.findById(req.params.hobby, function(err, hobby) {
-      if (err) res.send(err);
+      if (err) return next(err);
     res.json(hobby);
   });
 });
 
 //Add a new hobby
-router.post('/', auth.optional,  function(req, res, next){
+router.post('/', function(req, res, next){
+  console.log('posting body: ' + JSON.stringify(req.body));
+
   var hobby = new Hobby(req.body.hobby);
 
   hobby.save(function(err, hobby){
@@ -51,13 +53,13 @@ router.post('/', auth.optional,  function(req, res, next){
 });
 
 // Edit a contact
-router.put('/:hobby', auth.optional,  function(req, res, next) {
+router.put('/:hobby', function(req, res, next) {
     Hobby.findById(req.params.hobby, function(err, hobby) {
         if (err) res.send(err);
         if (req.body.title) hobby.title = req.body.title;
 
         hobby.save(function(err, savedHobby) {
-            if (err) send(err);
+            if (err) return next(err);
 
             res.json(savedHobby);
         });
@@ -66,7 +68,7 @@ router.put('/:hobby', auth.optional,  function(req, res, next) {
 
 
 //Delete a hobby
-router.delete('/:hobby',  auth.optional, function(req, res, next){
+router.delete('/:hobby', function(req, res, next){
   Hobby.remove({
     _id: req.params.hobby
   }, function(err, contact){

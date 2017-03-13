@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var deepPopulate = require('mongoose-deep-populate')(mongoose);
 var Contact = mongoose.model('Contact');
 var Hobby = mongoose.model('Hobby');
-var auth = require('../auth');
+
 
 router.param('contact', function(req, res, next, id){
   var query = Contact.findById(id);
@@ -15,7 +15,7 @@ router.param('contact', function(req, res, next, id){
 
       req.contact = contact;
       return next();
-  });
+  })
 });
 
 router.param('hobby', function(req, res, next, id){
@@ -29,25 +29,25 @@ router.param('hobby', function(req, res, next, id){
 
     req.hobby = hobby;
     return next();
-  });
+  })
 });
 
 //Get all contacts
-router.get('/', auth.optional, function(req, res, next){
+router.get('/', function(req, res, next){
   Contact.find().deepPopulate(['hobbies']).exec(function(err, contacts){
     if(err){
       return next(err);
     }
     console.log('Contacts: ' + contacts);
     res.json(contacts);
-  });
+  })
 });
 
 
 //Get a contact
-router.get('/:contact',auth.optional, function(req, res, next){
+router.get('/:contact',function(req, res, next){
   Contact.findById(req.params.contact, function(err, contact) {
-      if (err) res.send(err);
+      if (err) return next(err);
 
       contact.deepPopulate(['hobbies'], function(err, c){
       res.json(c);
@@ -56,7 +56,7 @@ router.get('/:contact',auth.optional, function(req, res, next){
 });
 
 //Add a new contact
-router.post('/', auth.optional, function(req, res, next){
+router.post('/', function(req, res, next){
   var contact = new Contact(req.body.contact);
 
   contact.save(function(err, contact){
@@ -70,16 +70,16 @@ router.post('/', auth.optional, function(req, res, next){
 });
 
 // Edit a contact
-router.put('/:contact', auth.optional,function(req, res, next) {
+router.put('/:contact',function(req, res, next) {
     Contact.findById(req.params.contact, function(err, contact) {
-        if (err) res.send(err);
+        if (err) return next(err);
         if (req.body.contact.first_name) contact.first_name = req.body.contact.first_name;
         if (req.body.contact.last_name) contact.last_name = req.body.contact.last_name;
         if (req.body.contact.email) contact.email = req.body.contact.email;
 
 
         contact.save(function(err, savedContact) {
-            if (err) send(err);
+            if (err) return next(err);
             savedContact.deepPopulate(['hobbies'], function(err, contact){
               res.json(contact);
           });
@@ -89,12 +89,12 @@ router.put('/:contact', auth.optional,function(req, res, next) {
 });
 
 //Add a new hobby to contact
-router.post('/:contact/hobbies',auth.optional, function(req, res, next){
-  console.log('Hobby passed: ' + JSON.stringify(req.body.hobby));
-  Hobby.findById(req.body.hobby.id, function(err, h){
+router.post('/:contact/hobbies', function(req, res, next){
+  Hobby.findById(req.body.hobby._id, function(err, h){
+      if(err) return next(err);
 
   Contact.findById(req.params.contact, function(err, contact) {
-      if (err) res.send(err);
+      if (err) return next(err);
 
     contact.hobbies.push(h);
     contact.save(function(err, savedContact){
@@ -111,7 +111,7 @@ router.post('/:contact/hobbies',auth.optional, function(req, res, next){
 });
 
 //Delete a contact
-router.delete('/:contact', auth.optional,function(req, res, next){
+router.delete('/:contact', function(req, res, next){
   Contact.remove({
     _id: req.params.contact
   }, function(err, contact){
@@ -122,7 +122,7 @@ router.delete('/:contact', auth.optional,function(req, res, next){
 });
 
 // Delete a hobby
-router.delete('/:contact/hobbies/:hobby',auth.optional,function(req, res, next) {
+router.delete('/:contact/hobbies/:hobby',function(req, res, next) {
   Contact.findById(req.params.contact, function(err, contact){
     if(err){
       return next(err);
