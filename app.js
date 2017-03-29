@@ -48,14 +48,12 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(require('method-override')());
 app.use(express.static(path.join(__dirname + 'public')));
-
-
-
 /*
   mongoose.connect('mongodb://localhost/contactsDb', function(error){
     console.log('Mongoose state: ' + mongoose.connection.readyState);
   });
 */
+
 mongoose.connect('mongodb://aacister:password123@ds145178.mlab.com:45178/heroku_g1ggrgzq', function(error){
   console.log('Mongoose state: ' + mongoose.connection.readyState);
 });

@@ -57,16 +57,30 @@ router.get('/:contact',function(req, res, next){
 
 //Add a new contact
 router.post('/', function(req, res, next){
-  var contact = new Contact(req.body.contact);
 
-  contact.save(function(err, contact){
+  var contact = new Contact();
+  contact.first_name = req.body.contact.first_name;
+  contact.last_name = req.body.contact.last_name;
+  contact.email = req.body.contact.email;
+  contact.hobbies = [];
+  let hobbies = [];
+  req.body.contact.hobbies.forEach(hobby => {
+               hobbies.push(Hobby.findById(hobby._id));
+  });
+
+
+  Promise.all(hobbies).then((hobbies) => {
+  contact.hobbies = hobbies;
+  return contact.save(function(err, contact){
     if(err){
       return next(err);
     }
-    contact.deepPopulate(['hobbies'], function(err, contact){
-      res.json(contact);
+    return contact.deepPopulate(['hobbies'], function(err, contact){
+      return res.json(contact);
     });
   });
+});
+
 });
 
 // Edit a contact
@@ -77,17 +91,25 @@ router.put('/:contact',function(req, res, next) {
         if (req.body.contact.last_name) contact.last_name = req.body.contact.last_name;
         if (req.body.contact.email) contact.email = req.body.contact.email;
 
+               let hobbies = [];
+               req.body.contact.hobbies.forEach(hobby => {
+          hobbies.push(Hobby.findById(hobby._id));
+      });
 
-        contact.save(function(err, savedContact) {
-            if (err) return next(err);
-            savedContact.deepPopulate(['hobbies'], function(err, contact){
-              res.json(contact);
-          });
-        });
-    });
+      Promise.all(hobbies).then((hobbies) => {
+               contact.hobbies = hobbies;
+               return contact.save(function(err, contact){
+               if(err){
+                              return next(err);
+               }
+               return contact.deepPopulate(['hobbies'], function(err, contact){
+                              return res.json(contact);
+               });
+       });
+     });
+  });
 
 });
-
 //Add a new hobby to contact
 router.post('/:contact/hobbies', function(req, res, next){
   Hobby.findById(req.body.hobby._id, function(err, h){
@@ -139,5 +161,26 @@ router.delete('/:contact/hobbies/:hobby',function(req, res, next) {
   });
 
 });
+
+// Delete all hobbies
+router.delete('/:contact/hobbies',function(req, res, next) {
+  Contact.findById(req.params.contact, function(err, contact){
+    if(err){
+      return next(err);
+    }
+    contact.hobbies = [];
+    contact.save(function(err, savedContact){
+      if(err){
+        return next(err);
+      }
+      savedContact.deepPopulate(['hobbies'], function(err, contact){
+        res.json(contact);
+      });
+    });
+  });
+
+});
+
+
 
 module.exports = router;
